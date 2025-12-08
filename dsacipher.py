@@ -4,7 +4,7 @@ Digital Signature implementacia:
 - RSA key generation (Miller-Rabin)
 - SHA3-512 hashing
 - Sign/verify functions
-- Key export/import (.priv, .pub)
+- Key export/import (. priv, .pub)
 """
 
 import random
@@ -30,7 +30,7 @@ def _egcd(a: int, b: int) -> Tuple[int, int, int]:
 
 
 def modinv(a: int, m: int) -> int:
-    """Modularny inverz a^{-1} mod m. Vyvola ValueError ak inverz neexistuje."""
+    """Modularny inverz a^{-1} mod m.  Vyvola ValueError ak inverz neexistuje."""
     g, x, _ = _egcd(a, m)
     if g != 1:
         raise ValueError("Modular inverse does not exist")
@@ -100,7 +100,7 @@ def generate_keys(
     bits: int = 512, progress_callback: Optional[Callable[[str], None]] = None
 ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     """
-    Generuje RSA par klucov.
+    Generuje RSA par klucov. 
     - bits: bitova dlzka pre kazde prvocislo p a q (n bude ~2*bits)
     - progress_callback: volitelny callback(msg) pre aktualizaciu GUI
     Vracia: (public_key(n,e), private_key(n,d))
@@ -140,7 +140,7 @@ def generate_keys(
         # Najdi ine e
         while True:
             e = random.randrange(3, phi - 1, 2)
-            if math.gcd(e, phi) == 1:
+            if math. gcd(e, phi) == 1:
                 break
     if progress_callback:
         progress_callback(f"1 < E < φ(N) -> E = {e}")
@@ -163,7 +163,7 @@ def generate_keys(
 
 def hash_file(file_path: str) -> bytes:
     """
-    Hashuje subor pomocou SHA3-512 (Keccak).
+    Hashuje subor pomocou SHA3-512 (Keccak). 
     Vracia 64-bajtovy hash.
     """
     sha3 = hashlib.sha3_512()
@@ -189,7 +189,7 @@ def sign_file(file_path: str, private_key: Tuple[int, int]) -> str:
     1. Zahashuj subor pomocou SHA3-512 -> 64 bajtov
     2. Konvertuj hash na integer
     3. Sifruj hash pomocou privatneho kluca (= podpis)
-    4. Vrat podpis ako Base64 string
+    4.  Vrat podpis ako Base64 string
     
     Vracia: "RSA_SHA3-512 BASE64_SIGNATURE"
     """
@@ -207,7 +207,7 @@ def sign_file(file_path: str, private_key: Tuple[int, int]) -> str:
     # Vypocitaj potrebny pocet bajtov pre n
     byte_length = (n.bit_length() + 7) // 8
     signature_bytes = signature_int.to_bytes(byte_length, byteorder='big')
-    signature_b64 = base64.b64encode(signature_bytes).decode('ascii')
+    signature_b64 = base64. b64encode(signature_bytes). decode('ascii')
     
     return f"RSA_SHA3-512 {signature_b64}"
 
@@ -259,7 +259,7 @@ def verify_signature(
 
 def export_private_key(private_key: Tuple[int, int], file_path: str):
     """
-    Exportuje privatny kluc do .priv suboru.
+    Exportuje privatny kluc do . priv suboru.
     Format: RSA N_BASE64 D_BASE64
     """
     n, d = private_key
@@ -268,7 +268,7 @@ def export_private_key(private_key: Tuple[int, int], file_path: str):
     n_bytes = n.to_bytes((n.bit_length() + 7) // 8, byteorder='big')
     d_bytes = d.to_bytes((d.bit_length() + 7) // 8, byteorder='big')
     
-    n_b64 = base64.b64encode(n_bytes).decode('ascii')
+    n_b64 = base64. b64encode(n_bytes). decode('ascii')
     d_b64 = base64.b64encode(d_bytes).decode('ascii')
     
     content = f"RSA {n_b64} {d_b64}"
@@ -288,7 +288,7 @@ def export_public_key(public_key: Tuple[int, int], file_path: str):
     n_bytes = n.to_bytes((n.bit_length() + 7) // 8, byteorder='big')
     e_bytes = e.to_bytes((e.bit_length() + 7) // 8, byteorder='big')
     
-    n_b64 = base64.b64encode(n_bytes).decode('ascii')
+    n_b64 = base64. b64encode(n_bytes). decode('ascii')
     e_b64 = base64.b64encode(e_bytes).decode('ascii')
     
     content = f"RSA {n_b64} {e_b64}"
@@ -303,12 +303,12 @@ def import_private_key(file_path: str) -> Tuple[int, int]:
     Vracia: (n, d)
     """
     with open(file_path, 'r') as f:
-        content = f.read().strip()
+        content = f.read(). strip()
     
     if not content.startswith("RSA "):
         raise ValueError("Invalid private key format")
     
-    parts = content.split()
+    parts = content. split()
     if len(parts) != 3:
         raise ValueError("Invalid private key format")
     
@@ -316,7 +316,7 @@ def import_private_key(file_path: str) -> Tuple[int, int]:
     d_b64 = parts[2]
     
     n_bytes = base64.b64decode(n_b64)
-    d_bytes = base64.b64decode(d_b64)
+    d_bytes = base64. b64decode(d_b64)
     
     n = int.from_bytes(n_bytes, byteorder='big')
     d = int.from_bytes(d_bytes, byteorder='big')
@@ -358,7 +358,7 @@ def import_public_key(file_path: str) -> Tuple[int, int]:
 
 def get_file_info(file_path: str) -> dict:
     """
-    Vrati informacie o subore.
+    Vrati informacie o subore. 
     Vracia dict s: name, path, extension, size, modified_date
     """
     stat = os.stat(file_path)
@@ -373,14 +373,14 @@ def get_file_info(file_path: str) -> dict:
 
 
 # ---------------------------
-# Praca so .sign suborom
+# Praca so . sign suborom
 # ---------------------------
 
 
 def save_signature(signature_str: str, output_path: str):
-    """Ulozi podpis do .sign suboru."""
+    """Ulozi podpis do . sign suboru."""
     with open(output_path, 'w') as f:
-        f.write(signature_str)
+        f. write(signature_str)
 
 
 def load_signature(sign_path: str) -> str:
@@ -418,7 +418,7 @@ if __name__ == "__main__":
     
     # Test s upravenym suborom
     with open(test_file, 'a') as f:
-        f.write(" MODIFIED")
+        f. write(" MODIFIED")
     
     print("\nVerifying modified file...")
     is_valid_modified = verify_signature(test_file, signature, pub)

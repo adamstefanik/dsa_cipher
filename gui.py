@@ -1,7 +1,6 @@
 """
 gui.py
 Digital Signature GUI - elektronicky podpis suborov
-- Styl zhodny s RSA cipher GUI (zelene bordery, темная tema)
 """
 
 import tkinter as tk
@@ -24,7 +23,7 @@ from dsacipher import (
     load_signature,
 )
 
-# Theme konstanty - zhodne s RSA cipher
+# Theme konstanty
 DARK_BG = "#222026"
 FIELD_BG = "#222026"
 LIGHT_TXT = "#9bf08f"
@@ -55,6 +54,8 @@ class DigitalSignatureGUI:
         self.private_key = None
         self.selected_file = None
         self.signature_str = None
+        self.selected_zip = None
+        self.verify_public_key = None  # Separatny kluc pre verify
 
         self._build_ui()
 
@@ -157,7 +158,7 @@ class DigitalSignatureGUI:
 
         self.select_file_btn = ttk.Button(
             parent,
-            text="CHOOSE FILE...",
+            text="CHOOSE FILE.. .",
             style="Custom.TButton",
             command=self.on_select_file,
         )
@@ -233,7 +234,7 @@ class DigitalSignatureGUI:
 
         self.export_keys_btn = ttk.Button(
             export_frame,
-            text="EXPORT KEYS (.priv + .pub)",
+            text="EXPORT KEYS (. priv + .pub)",
             style="Custom.TButton",
             command=self.on_export_keys,
             state=tk.DISABLED,
@@ -253,7 +254,7 @@ class DigitalSignatureGUI:
         # Nacitanie verejneho kluca
         tk.Label(
             parent,
-            text="Load Public Key:",
+            text="1. Load Public Key:",
             bg=DARK_BG,
             fg=LIGHT_TXT,
             font=LABEL_FONT,
@@ -261,7 +262,7 @@ class DigitalSignatureGUI:
 
         self.load_pubkey_btn = ttk.Button(
             parent,
-            text="LOAD .pub FILE...",
+            text="LOAD . pub FILE.. .",
             style="Custom.TButton",
             command=self.on_load_public_key,
         )
@@ -270,7 +271,7 @@ class DigitalSignatureGUI:
         # Status verejneho kluca
         self.pubkey_status_label = tk.Label(
             parent,
-            text="No public key loaded",
+            text="❌ No public key loaded",
             bg=DARK_BG,
             fg="#999999",
             font=("Consolas", 9),
@@ -278,10 +279,10 @@ class DigitalSignatureGUI:
         )
         self.pubkey_status_label.pack(anchor=tk.W, pady=(0, 10))
 
-        # Vyber .zip suboru na overenie
+        # Vyber . zip suboru na overenie
         tk.Label(
             parent,
-            text="Select Signed Package:",
+            text="2. Select Signed Package:",
             bg=DARK_BG,
             fg=LIGHT_TXT,
             font=LABEL_FONT,
@@ -289,13 +290,13 @@ class DigitalSignatureGUI:
 
         self.select_zip_btn = ttk.Button(
             parent,
-            text="CHOOSE .zip FILE...",
+            text="CHOOSE . zip FILE...",
             style="Custom.TButton",
             command=self.on_select_zip,
         )
         self.select_zip_btn.pack(fill=tk.X, pady=(0, 6), ipady=4)
 
-        # Informacie o .zip subore
+        # Informacie o . zip subore
         tk.Label(
             parent,
             text="Package Information:",
@@ -323,10 +324,18 @@ class DigitalSignatureGUI:
         self.zip_info_text.pack(fill=tk.BOTH, expand=False, pady=(0, 10))
 
         # Overenie
+        tk.Label(
+            parent,
+            text="3. Verify:",
+            bg=DARK_BG,
+            fg=LIGHT_TXT,
+            font=LABEL_FONT,
+        ).pack(anchor=tk.W, pady=(10, 2))
+
         self.verify_btn = ttk.Button(
             parent,
             text="VERIFY SIGNATURE",
-            style="Custom.TButton",
+            style="Custom. TButton",
             command=self.on_verify_signature,
             state=tk.DISABLED,
         )
@@ -359,6 +368,10 @@ class DigitalSignatureGUI:
         )
         self.verify_result_text.pack(fill=tk.BOTH, expand=True, pady=(0, 0))
 
+    # ---------------------------
+    # Akcie - Lavy panel (Podpisovanie)
+    # ---------------------------
+
     def on_generate_keys(self):
         """Generovanie RSA klucov."""
         bits = int(self.key_bits_var.get())
@@ -373,13 +386,7 @@ class DigitalSignatureGUI:
                 self.private_key = priv
 
                 self.root.after(
-                    0, lambda: self.append_status(f"Keys generated successfully!")
-                )
-                self.root.after(
-                    0, lambda: self.append_status(f"Public key (n, e): {pub}")
-                )
-                self.root.after(
-                    0, lambda: self.append_status(f"Private key (n, d): {priv}")
+                    0, lambda: self.append_status(f"✓ Keys generated successfully! ")
                 )
                 self.root.after(0, lambda: self.export_keys_btn.config(state=tk.NORMAL))
 
@@ -418,7 +425,7 @@ class DigitalSignatureGUI:
             f"Modified: {info['modified']}",
         )
 
-        self.append_status(f"File selected: {info['name']}")
+        self.append_status(f"✓ File selected: {info['name']}")
 
         # Ak su vygenerovane kluce, povol podpisovanie
         if self.private_key:
@@ -434,7 +441,7 @@ class DigitalSignatureGUI:
         base_name = os.path.basename(self.selected_file)
         zip_path = filedialog.asksaveasfilename(
             title="Save signed package",
-            defaultextension=".zip",
+            defaultextension=". zip",
             initialfile=f"{base_name}.zip",
             filetypes=[("ZIP files", "*.zip")],
         )
@@ -451,7 +458,7 @@ class DigitalSignatureGUI:
                 signature = sign_file(self.selected_file, self.private_key)
                 self.signature_str = signature
 
-                # Uloz .sign subor
+                # Uloz . sign subor
                 sign_filename = f"{base_name}.sign"
                 temp_sign_path = os.path.join(
                     os.path.dirname(self.selected_file), sign_filename
@@ -463,11 +470,11 @@ class DigitalSignatureGUI:
                     zipf.write(self.selected_file, base_name)
                     zipf.write(temp_sign_path, sign_filename)
 
-                # Vymaz docasny .sign subor
+                # Vymaz docasny . sign subor
                 os.remove(temp_sign_path)
 
                 self.root.after(
-                    0, lambda: self.append_status(f"Signed package saved: {zip_path}")
+                    0, lambda: self.append_status(f"✓ Signed package saved: {zip_path}")
                 )
                 self.root.after(
                     0,
@@ -500,10 +507,14 @@ class DigitalSignatureGUI:
             export_private_key(self.private_key, priv_path)
             export_public_key(self.public_key, pub_path)
 
-            self.append_status(f"Keys exported to: {folder}")
+            self.append_status(f"✓ Keys exported to: {folder}")
             messagebox.showinfo("Success", f"Keys saved:\n{priv_path}\n{pub_path}")
         except Exception as ex:
             messagebox.showerror("Error", str(ex))
+
+    # ---------------------------
+    # Akcie - Pravy panel (Overovanie)
+    # ---------------------------
 
     def on_load_public_key(self):
         """Nacitanie verejneho kluca z .pub suboru."""
@@ -516,11 +527,18 @@ class DigitalSignatureGUI:
             return
 
         try:
-            self.public_key = import_public_key(pub_path)
+            self.verify_public_key = import_public_key(pub_path)
             self.pubkey_status_label.config(
                 text=f"✓ Public key loaded: {os.path.basename(pub_path)}", fg=ACCENT
             )
-            self.append_verify_result(f"Public key loaded: {self.public_key}")
+            self.append_verify_result(
+                f"✓ Public key loaded\n\nn = {self.verify_public_key[0]}\ne = {self.verify_public_key[1]}"
+            )
+
+            # Ak je nacitany aj zip, povol verify
+            if self.selected_zip:
+                self.verify_btn.config(state=tk.NORMAL)
+
         except Exception as ex:
             messagebox.showerror("Error", f"Failed to load public key:\n{ex}")
 
@@ -558,16 +576,16 @@ class DigitalSignatureGUI:
         self.selected_zip = zip_path
 
         # Ak je nacitany verejny kluc, povol overenie
-        if self.public_key:
+        if self.verify_public_key:
             self.verify_btn.config(state=tk.NORMAL)
 
     def on_verify_signature(self):
         """Overenie podpisu."""
-        if not self.public_key:
+        if not self.verify_public_key:
             messagebox.showwarning("Warning", "Load public key first!")
             return
 
-        if not hasattr(self, "selected_zip"):
+        if not self.selected_zip:
             messagebox.showwarning("Warning", "Select signed package first!")
             return
 
@@ -577,7 +595,7 @@ class DigitalSignatureGUI:
         def worker():
             temp_dir = None
             try:
-                # Rozbal .zip do docasneho priecinka
+                # Rozbal . zip do docasneho priecinka
                 temp_dir = "temp_verify"
                 os.makedirs(temp_dir, exist_ok=True)
 
@@ -605,36 +623,40 @@ class DigitalSignatureGUI:
                 signature_str = load_signature(sign_path)
 
                 # Over podpis
-                is_valid = verify_signature(doc_path, signature_str, self.public_key)
+                is_valid = verify_signature(
+                    doc_path, signature_str, self.verify_public_key
+                )
 
                 # Zobraz vysledok
                 if is_valid:
                     result_msg = (
-                        "✓ SIGNATURE VALID\n\n"
+                        "✓✓✓ SIGNATURE VALID ✓✓✓\n\n"
                         f"Document: {doc_file_name}\n"
-                        f"Signature: {signature_str[:50]}...\n"
+                        f"Signature: {signature_str[:60]}...\n"
                         f"Status: AUTHENTIC\n\n"
-                        "The document has not been modified and was signed with the corresponding private key."
+                        "The document has NOT been modified.\n"
+                        "The signature was created with the corresponding private key."
                     )
                     self.root.after(0, lambda: self.append_verify_result(result_msg))
                     self.root.after(
                         0,
                         lambda: messagebox.showinfo(
-                            "Verification Success", "✓ Signature is VALID!"
+                            "✓ Verification Success", "Signature is VALID!"
                         ),
                     )
                 else:
                     result_msg = (
-                        "✗ SIGNATURE INVALID\n\n"
+                        "✗✗✗ SIGNATURE INVALID ✗✗✗\n\n"
                         f"Document: {doc_file_name}\n"
                         f"Status: COMPROMISED\n\n"
-                        "WARNING: The document may have been modified or the signature is incorrect!"
+                        "WARNING: The document may have been MODIFIED\n"
+                        "or the signature is incorrect!"
                     )
                     self.root.after(0, lambda: self.append_verify_result(result_msg))
                     self.root.after(
                         0,
                         lambda: messagebox.showwarning(
-                            "Verification Failed", "✗ Signature is INVALID!"
+                            "✗ Verification Failed", "Signature is INVALID!"
                         ),
                     )
 
@@ -648,6 +670,10 @@ class DigitalSignatureGUI:
                 self.root.after(0, lambda: self.verify_btn.config(state=tk.NORMAL))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    # ---------------------------
+    # Pomocne funkcie
+    # ---------------------------
 
     def append_status(self, text: str):
         """Prida riadok do status pola."""
